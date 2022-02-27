@@ -1,6 +1,7 @@
 
-# Sonoff NSPanel Tasmota (Nextion with Flashing) driver | code by peepshow-21
+# Sonoff NSPanel Tasmota driver 
 # based on;
+# Sonoff NSPanel Tasmota (Nextion with Flashing) driver | code by peepshow-21
 # Sonoff NSPanel Tasmota driver v0.47 | code by blakadder and s-hadinger
 
 class Nextion : Driver
@@ -204,8 +205,23 @@ class Nextion : Driver
                             else
                             
                             #   var jm = string.format("{\"nextion\":\"%s\"}",str(msg[0..-4]))
-                                var jm = string.format("{\"nextion\":\"%s\"}",str(msg[0..-4]))
-                            
+                            #   var jm = string.format("{\"nextion\":\"%s\"}",str(msg[0..-4]))
+                                var jm = msg.asstring() #message pour Jeedom
+
+                                if jm == "switch1_true"
+                                    tasmota.set_power(0, true)
+                                elif jm == "switch1_false"
+                                     tasmota.set_power(0, false)
+                                elif jm == "switch2_true"
+                                     tasmota.set_power(1, true)
+                                elif jm == "switch2_false"
+                                     tasmota.set_power(1, false)
+                                end
+
+
+
+
+
                                 tasmota.publish_result(jm, "RESULT")        
                             end
                         end       
@@ -217,7 +233,7 @@ class Nextion : Driver
 
     def begin_file_flash()
         self.flash_mode = 1
-        var f = open("test.bin","w")
+       var f = open("test.bin","w")
         f.close()
         while self.tot_read<self.flash_size
             var x = self.write_chunk()
@@ -260,6 +276,8 @@ class Nextion : Driver
         else 
             self.sendnx('switch2=0')
         end
+        #var tmp = tasmota.set_temp()
+        #tasmota.publish_result(tmp, "RESULT")
     end
 
     def set_clock()
@@ -284,6 +302,17 @@ var nextion = Nextion()
 
 tasmota.add_driver(nextion)
 
+def set_temp(value)
+  var temp_ajust = value + 24
+  temp_ajust = temp_ajust * 10
+  var temp_payload = 'page0.x1.val=' + str(temp_ajust) 
+  log('NSP: Indoor temperature set with ' + temp_payload, 3)
+  tasmota.publish_result(temp_payload, "RESULT")
+  nextion.sendnx(temp_payload)
+end
+
+tasmota.add_rule("Tele#ANALOG#Temperature1", set_temp) # rule to run set_temp on teleperiod
+
 def flash_nextion(cmd, idx, payload, payload_json)
     def task()
         nextion.start_flash(payload)
@@ -295,7 +324,8 @@ end
 tasmota.add_cmd('FlashNextion', flash_nextion)
 
 def send_cmd(cmd, idx, payload, payload_json)
-    nextion.sendnx(payload)
+    #nextion.sendnx(payload)
+    var command = nextion.sendnx(payload)
     tasmota.resp_cmnd_done()
 end
 
@@ -306,23 +336,7 @@ def send_cmd2(cmd, idx, payload, payload_json)
     tasmota.resp_cmnd_done()
 end
 
-# add NSPSend command to Tasmota
-def nspsend(cmd, idx, payload, payload_json)
-  # NSPSend2 sends Nextion commands
-  if idx == 2
-  var command = nextion.sendnx(payload)
-  tasmota.resp_cmnd_done()
-  # NSPSend sends NSPanel commands, requires valid payload
-  else
-  import json
-  var command = nextion.send(json.dump(payload_json))
-  tasmota.resp_cmnd_done()
-  end
-end
-
-tasmota.add_cmd('NSPSend', nspsend)
-
-tasmota.add_cmd('Screen', send_cmd2)
+tasmota.add_cmd('Screen', send_cmd)
 tasmota.add_cmd('NxPanel', send_cmd2)
 
 tasmota.add_rule("power1#state", /-> nextion.set_power())
@@ -332,5 +346,3 @@ tasmota.add_rule("Time#Minute", /-> nextion.set_clock())
 tasmota.add_rule("system#boot", /-> nextion.screeninit()) 
 
 tasmota.cmd("State")
-
-
