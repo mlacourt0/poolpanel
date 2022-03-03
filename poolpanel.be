@@ -292,7 +292,18 @@ class Nextion : Driver
         #log('NSP: Time and date synced with ' + time_payload, 3)
         #self.send(time_payload)
 
-        var time_playload = 'page0.t0.txt=\"' + str(nsp_time['hour']) + ':' + str(nsp_time['min']) + '\"' 
+        #var time_playload = 'page0.t0.txt=\"' + str(nsp_time['hour']) + ':' + str(nsp_time['min']) + '\"' 
+        
+        var time_playload = 'page0.t0.txt=\"'
+        if nsp_time['hour'] < 10
+            time_playload = time_playload + '0'
+        end
+        time_playload = time_playload + str(nsp_time['hour']) + ':'
+        if nsp_time['min'] < 10
+            time_playload = time_playload + '0'
+        end
+        time_playload = time_playload + str(nsp_time['min']) + '\"'
+        
         self.sendnx(time_playload)
     end
 
