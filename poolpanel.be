@@ -233,7 +233,7 @@ class Nextion : Driver
 
     def begin_file_flash()
         self.flash_mode = 1
-       var f = open("test.bin","w")
+        var f = open("test.bin","w")
         f.close()
         while self.tot_read<self.flash_size
             var x = self.write_chunk()
@@ -293,7 +293,7 @@ class Nextion : Driver
         #self.send(time_payload)
 
         #var time_playload = 'page0.t0.txt=\"' + str(nsp_time['hour']) + ':' + str(nsp_time['min']) + '\"' 
-        
+
         var time_playload = 'page0.t0.txt=\"'
         if nsp_time['hour'] < 10
             time_playload = time_playload + '0'
@@ -303,7 +303,7 @@ class Nextion : Driver
             time_playload = time_playload + '0'
         end
         time_playload = time_playload + str(nsp_time['min']) + '\"'
-        
+
         self.sendnx(time_playload)
     end
 
@@ -335,8 +335,7 @@ end
 tasmota.add_cmd('FlashNextion', flash_nextion)
 
 def send_cmd(cmd, idx, payload, payload_json)
-    #nextion.sendnx(payload)
-    var command = nextion.sendnx(payload)
+    nextion.sendnx(payload)
     tasmota.resp_cmnd_done()
 end
 
@@ -357,3 +356,5 @@ tasmota.add_rule("Time#Minute", /-> nextion.set_clock())
 tasmota.add_rule("system#boot", /-> nextion.screeninit()) 
 
 tasmota.cmd("State")
+
+
